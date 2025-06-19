@@ -1,7 +1,7 @@
 
 # GPIO Power Monitoring Application
 
-This application is used to monitor the state of a GPIO line on a Linux system (typically embedded platforms like debian .). It logs **HIGH/LOW** changes with **timestamps from RTC** and manages status LEDs and network checks.
+This application is used to monitor the state of a GPIO line on a Linux system (typically embedded platforms like debian .). It logs **HIGH/LOW** changes with **timestamps from datetime Library** and manages status LEDs and network checks.
 
 ---
 
@@ -32,7 +32,7 @@ This application is used to monitor the state of a GPIO line on a Linux system (
   - OFF when GPIO is LOW.
 - **LED2**: Network connectivity.
   - ON when connected.
-  - Blinks when network is down.
+  - heartbeat trigger when network is down.
 
 ### Network Connectivity
 - Pings Google's DNS (8.8.8.8) to verify Internet access.
@@ -63,7 +63,6 @@ State : LOW
 
 Responsible for:
 - Exporting and configuring GPIO.
-- Getting RTC time.
 - Starting `GPIO_Power_Monitor`.
 
 ```python
@@ -82,7 +81,7 @@ Contains the main loop:
 def GPIO_Power_Monitor():
     while True:
         current_state = read_gpio(GPIO_INPUT)
-        rtc_time = read_rtc_time()
+        rtc_time = datetime.now()
 
         if current_state != previous_state:
             # Log timestamp and state
@@ -115,13 +114,12 @@ Ensure script is run with **root privileges** to access GPIO and RTC.
 - Linux with `/sys/class/gpio` and `/dev/rtc0` support
 - LED entries: `/sys/class/leds/led1` and `/sys/class/leds/led2`
 - Python 3
-- Permissions for GPIO and RTC access
+- Permissions for GPIO 
 
 ---
 
 ## Debug Tips
 
-- **RTC not working?** Check `/dev/rtc0` exists.
 - **GPIO not responding?** Confirm the pin number is correct and accessible.
 - **LED not lighting?** Check permissions and `led_name`.
 
