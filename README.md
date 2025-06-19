@@ -9,7 +9,7 @@ This application is used to monitor the state of a GPIO line on a Linux system (
 
 ```
 .
-├── main.py             # Contains GPIO setup, RTC time functions, and execution entry
+├── main.py             # Contains GPIO setup and execution entry
 ├── gpio_monitor.py     # Main GPIO monitoring logic and LED/network handling
 ├── GPIO_logs/          # Directory to store generated log files
 ```
