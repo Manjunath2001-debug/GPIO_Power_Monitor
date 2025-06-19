@@ -2,31 +2,15 @@
 #>> Application for power monitoring of GPIO.
 #------------------------------------------------------------------------------------------------------
 import os
-import fcntl
-import struct
-from datetime import datetime
 #------------------------------------------------------------------------------------------------------
-GPIO_INPUT = 88    # GPIO line to monitor
-GPIO_LED_1 = "led1"
-GPIO_LED_2 = "led2"
+GPIO_INPUT = 89    # GPIO line to monitor
 
-RTC_DEVICE = "/dev/rtc0"
-RTC_RD_TIME = 0x80247009
 #------------------------------------------------------------------------------------------------------
-LOG_DIR = './GPIO_logs'
+LOG_DIR = 'GPIO_logs'
 os.makedirs(LOG_DIR, exist_ok=True)
 log_file = None
 GPIO_PATH = "/sys/class/gpio"
-#-------------------------------------------------------------------------------------------------------
-def read_rtc_time():
-    """Initialize the RTC time from the device.
-       :return: return device current time.
-       """
-    with open(RTC_DEVICE, 'rb') as rtc:
-        buf = bytearray(8 * 4)
-        fcntl.ioctl(rtc, RTC_RD_TIME, buf)
-        tm_sec, tm_min, tm_hour, tm_mday, tm_mon, tm_year, tm_wday, tm_yday = struct.unpack('8i', buf)
-        return datetime(tm_year + 1900, tm_mon + 1, tm_mday, tm_hour, tm_min, tm_sec)
+
 #--------------------------------------------------------------------------------------------------------
 def export_gpio(pin):
     """Function used to export GPIO pin.
