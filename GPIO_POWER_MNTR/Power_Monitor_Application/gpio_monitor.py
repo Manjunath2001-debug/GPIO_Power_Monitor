@@ -1,6 +1,8 @@
 import csv,os,time,subprocess
-from main import read_rtc_time,LOG_DIR,log_file,GPIO_INPUT,unexport_gpio
+from main import LOG_DIR,log_file,GPIO_INPUT,unexport_gpio
 from main import read_gpio
+import pwd, grp
+from datetime import datetime
 #------------------------------------------------------------------------------------------------
 def GPIO_Power_Monitor():
     """
@@ -18,18 +20,13 @@ def GPIO_Power_Monitor():
         print("Monitoring started. Press Ctrl+C to stop.")
         while True:
             current = read_gpio(GPIO_INPUT)
-            rtc_now = read_rtc_time()
-
-            if not rtc_now:
-                print("RTC time not available. Skipping this cycle.")
-                time.sleep(0.2)
-                continue
+            rtc_now = datetime.now()
 
             time.sleep(0.1)
 
             if current != previous:
                 timestamp = rtc_now.strftime('%Y-%m-%d %H:%M:%S')
-                #print(f"[DEBUG]-current time : {timestamp}")
+                # print(f"[DEBUG]-current time : {timestamp}")
                 previous = current
 
                 if current == "1": # State is High
@@ -42,7 +39,21 @@ def GPIO_Power_Monitor():
                         writer = csv.writer(file)
                         writer.writerow([f"Timestamp : {timestamp}"])
                         writer.writerow([f"State : HIGH"])
+                    #-------------------------------------------------------------------------------
+                    # change the ownership of the log file here 
+                    try:
+                        new_owner = "calixto_admin"      # replace with the desired username
+                        new_group = "calixto_admin"     # replace with the desired group name
 
+                        uid = pwd.getpwnam(new_owner).pw_uid
+                        gid = grp.getgrnam(new_group).gr_gid
+
+                        os.chown(log_file, uid, gid)
+                        print(f"[INFO] Changed ownership: {log_file}")
+
+                    except Exception as e:
+                        print(f"[ERROR] Failed to change ownership: {e}")
+                    #---------------------------------------------------------------------------------
                     print(f"[HIGH] Logged new file: {filename} | LED ON")
 
                 else:
@@ -59,6 +70,7 @@ def GPIO_Power_Monitor():
                             print("[LOW] No log files found in directory. | LED OFF")
                             continue  # Skip 
 
+                    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     # Append LOW state to the latest file
                     with open(log_file, mode='a', newline='') as file:
                         writer = csv.writer(file)
@@ -69,14 +81,11 @@ def GPIO_Power_Monitor():
             network_status = Network_Connectivity(3, 1)
     
             if network_status:
-                print("[DEBUG]:Inside network connection")
+                #print("[DEBUG]:Inside network connection")
                 set_led("led1", 1)      
             else:
-            # Blink LED2 only if network is down
-                set_led("led1", 1)
-                time.sleep(0.2)
-                set_led("led1", 0)
-                time.sleep(0.2)
+                # Blink LED2 only if network is down and using heartbeat pulse
+                set_led_trigger("led1", "heartbeat")
                 
             time.sleep(0.2)
 
@@ -128,3 +137,12 @@ def set_led(led_name, value):
         print(f"[ERROR] Could not set {led_name} to {value}: {e}")
 
 #--------------------------------------------------------------------------------------------------------------------
+def set_led_trigger(led_name, trigger_value):
+    try:
+        subprocess.run(
+            ['sh', '-c', f'echo {trigger_value} > /sys/class/leds/{led_name}/trigger'],
+            check=True
+        )
+        print(f"[INFO] Set {led_name} trigger to '{trigger_value}'")
+    except subprocess.CalledProcessError as e:
+        print(f"[ERROR] Failed to set trigger '{trigger_value}' on {led_name}: {e}")
