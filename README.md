@@ -105,13 +105,13 @@ def Network_Connectivity():
 sudo python3 main.py
 ```
 
-Ensure script is run with **root privileges** to access GPIO and RTC.
+Ensure script is run with **root privileges** to access GPIO.
 
 ---
 
 ## Requirements
 
-- Linux with `/sys/class/gpio` and `/dev/rtc0` support
+- Linux with `/sys/class/gpio` support
 - LED entries: `/sys/class/leds/led1` and `/sys/class/leds/led2`
 - Python 3
 - Permissions for GPIO 
